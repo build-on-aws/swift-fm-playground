@@ -1,0 +1,252 @@
+openapi: 3.1.0
+
+info:
+  title: SwiftBackend
+  version: 1.0.0
+
+components:
+  schemas:
+    ModelInfo:
+      type: object
+      properties:
+        modelId:
+          type: string
+        providerName:
+          type: string
+        modelName:
+          type: string
+#     ModelDetails:
+#       type: object
+#       properties:
+#         modelId:
+#           type: string
+#         providerName:
+#           type: string
+#         modelName:
+#           type: string
+#         customizationsSupported:
+#           type: string
+#         outputModalities:
+#           type: string
+#         modelArn:
+#           type: string
+
+paths:
+  /:
+    get:
+      responses:
+        "200":
+          description: Status ok, without message
+
+  /health:
+    get:
+      operationId: greet
+      responses:
+        "200":
+          description: An 'I am healthy!' message
+          content:
+            application/json:
+              schema:
+                type: string
+
+  /foundation-models:
+    get:
+      operationId: getFoundationModels
+      summary: Get all available models
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ModelInfo"
+        "400":
+          description: Bad request
+        "500":
+          description: Internal server error
+
+  # /foundation-models/{model_id}:
+  #   get:
+  #     summary: Get a specific model by ID
+  #     parameters:
+  #       - name: model_id
+  #         in: path
+  #         required: true
+  #         schema:
+  #           type: string
+  #     responses:
+  #       '200':
+  #         description: Successful operation
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: '#/components/schemas/ModelDetails'
+  #       '400':
+  #         description: Bad request
+  #       '500':
+  #         description: Internal server error
+
+  /foundation-models/text/{modelId}:
+    post:
+      summary: Invoke a specific text generation model by ID
+      parameters:
+        - name: modelId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prompt:
+                  type: string
+                temperature:
+                  type: number
+                maxTokens:
+                  type: integer
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  completion:
+                    type: string
+        "400":
+          description: Bad request
+        "500":
+          description: Internal server error
+
+  /foundation-models/chat/{modelId}/:
+    post:
+      summary: Chat with a specific model.
+      operationId: chatWithModel
+      parameters:
+        - name: modelId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                messages:
+                  type: string
+                  description: The conversation history and new message formatted as a string.
+              required:
+                - prompt
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  completion:
+                    type: string      # DRY
+        "400":
+          description: Bad request
+        "500":
+          description: Internal server error
+
+  /foundation-models/model/image/{modelId}/invoke:      # currently only for one model
+    post:
+      summary: Invoke a specific image generation model by ID
+      parameters:
+        - name: modelId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prompt:
+                  type: string
+                  description: The text prompt for image generation.
+                stylePreset:
+                  type: string
+                  description: The style preset to apply to the generated image. Empty string for no style.
+              required:
+                - prompt
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  imageByteArray:
+                    type: string
+                    format: string      # check this
+                    description: Base64 encoded PNG image data.
+        "400":
+          description: Bad request
+        "500":
+          description: Internal server error
+
+# /foundation-models/model/video/{modelId}/invoke: # does not exist at all, fully hypothetical
+#   post:
+#     summary: Invoke a specific video generation model by ID
+#     parameters:
+#       - name: modelId
+#         in: path
+#         required: true
+#         schema:
+#           type: string
+#         description: The ID of the video generation model to use.
+#     requestBody:
+#       required: true
+#       content:
+#         application/json:
+#           schema:
+#             type: object
+#             properties:
+#               prompt:
+#                 type: string
+#               referenceImage:
+#                 type: string
+#                 format: string # check this
+#                 description: Optional reference image for the video generation.
+#             required:
+#               - prompt
+#     # headers:
+#     #   Content-Type:
+#     #     schema:
+#     #       type: string
+#     #       enum: ['application/json']
+#     #     required: true
+#     responses:
+#       '200':
+#         description: Successful response  # think about how to return
+#         content:
+#           application/json:
+#             schema:
+#               type: object
+#               properties:
+#                 url:
+#                   type: string
+#                 handle:
+#                   type: string
+#       '400':
+#         description: Bad request
+#       '500':
+#         description: Internal server error
